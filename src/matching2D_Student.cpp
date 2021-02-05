@@ -176,15 +176,83 @@ void detKeypointsHarris(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis
 
 void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string detectorType, bool bVis)
 {
-    int threshold = 30;                                                              // difference between intensity of the central pixel and pixels of a circle around this pixel
-    bool bNMS = true;                                                                // perform non-maxima suppression on keypoints
-    cv::FastFeatureDetector::DetectorType type = cv::FastFeatureDetector::TYPE_9_16; // TYPE_9_16, TYPE_7_12, TYPE_5_8
-    cv::Ptr<cv::FeatureDetector> detector = cv::FastFeatureDetector::create(threshold, bNMS, type);
+    // shared variables declaration
+    double t;
+    int threshold;
+    cv::Ptr<cv::FeatureDetector> detector;
 
-    double t = (double)cv::getTickCount();
-    detector->detect(img, keypoints);
-    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "FAST detection with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    if (detectorType.compare("FAST") == 0)
+    {
+        threshold = 30; // difference between intensity of the central pixel and pixels of a circle around this pixel
+        bool bNMS = true; // perform non-maxima suppression on keypoints
+        cv::FastFeatureDetector::DetectorType type = cv::FastFeatureDetector::TYPE_9_16; // TYPE_9_16, TYPE_7_12, TYPE_5_8
+        detector = cv::FastFeatureDetector::create(threshold, bNMS, type);
+
+        t = (double)cv::getTickCount();
+        detector->detect(img, keypoints);
+        t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+        cout << detectorType << " detection with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    }
+    else if (detectorType.compare("BRISK") == 0)
+    {
+        threshold = 30; // AGAST detection threshold score
+        int octaves = 3; // detection octaves, use 0 to do single scale
+        float patternScale = 1.0f; // apply this scale to the pattern used for samping the neighbourhood of a keypount
+        detector = cv::BRISK::create(threshold, octaves, patternScale);
+
+        t = (double)cv::getTickCount();
+        detector->detect(img, keypoints);
+        t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+        cout << detectorType << " detection with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    }
+    else if (detectorType.compare("ORB") == 0)
+    {
+        int nfeatures = 500; // max features to retain
+        float scaleFactor = 1.2f; // pyramid decimation ratio, greater than 1
+        int nlevels = 8; // number of pyramid levels
+        int edgeThreshold = 31; // size of border where no features are detected
+        int firstLevel = 0; // level of pyramid to put source image to
+        int WTA_K = 2; // number of points that produce each element of the oriented BRIEF descriptor
+        cv::ORB::ScoreType scoreType = cv::ORB::HARRIS_SCORE; // score used to rank features
+        int patchSize = 31; // size of patch used by oriented BREF descriptor
+        threshold = 20; // fast detection threshold score
+        detector = cv::ORB::create(nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, WTA_K, scoreType, patchSize, threshold);
+
+        t = (double)cv::getTickCount();
+        detector->detect(img, keypoints);
+        t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+        cout << detectorType << " detection with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    }
+    else if (detectorType.compare("AKAZE") == 0)
+    {
+        int nfeatures = 500; // max features to retain
+        float scaleFactor = 1.2f; // pyramid decimation ratio, greater than 1
+        int nlevels = 8; // number of pyramid levels
+        int edgeThreshold = 31; // size of border where no features are detected
+        int firstLevel = 0; // level of pyramid to put source image to
+        int WTA_K = 2; // number of points that produce each element of the oriented BRIEF descriptor
+        cv::ORB::ScoreType scoreType = cv::ORB::HARRIS_SCORE; // score used to rank features
+        int patchSize = 31; // size of patch used by oriented BREF descriptor
+        threshold = 20; // fast detection threshold score
+        detector = cv::ORB::create(nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, WTA_K, scoreType, patchSize, threshold);
+
+        t = (double)cv::getTickCount();
+        detector->detect(img, keypoints);
+        t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+        cout << detectorType << " detection with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    }
+    else if (detectorType.compare("SIFT") == 0)
+    {
+        threshold = 30; // AGAST detection threshold score
+        int octaves = 3; // detection octaves, use 0 to do single scale
+        float patternScale = 1.0f; // apply this scale to the pattern used for samping the neighbourhood of a keypount
+        detector = cv::BRISK::create(threshold, octaves, patternScale);
+
+        t = (double)cv::getTickCount();
+        detector->detect(img, keypoints);
+        t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+        cout << detectorType << " detection with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    }
 
     // visualize results
     if (bVis)

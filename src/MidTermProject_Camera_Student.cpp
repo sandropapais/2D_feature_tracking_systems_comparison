@@ -70,14 +70,13 @@ int main(int argc, const char *argv[])
             dataBuffer.push_back(frame);
         }
         
-        //// EOF STUDENT ASSIGNMENT
         cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
 
         /* DETECT IMAGE KEYPOINTS */
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "FAST";
+        string detectorType = "ORB";
 
         // string-based selection based on detectorType -> SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
         if (detectorType.compare("SHITOMASI") == 0)
@@ -88,7 +87,11 @@ int main(int argc, const char *argv[])
         {
             detKeypointsHarris(keypoints, imgGray, false);
         }
-        else if (detectorType.compare("FAST") == 0)
+        else if (detectorType.compare("FAST") == 0 ||
+                 detectorType.compare("BRISK") == 0 ||
+                 detectorType.compare("ORB") == 0 ||
+                 detectorType.compare("AKAZE") == 0 ||
+                 detectorType.compare("SIFT") == 0)
         {
             detKeypointsModern(keypoints, imgGray, detectorType, false);
         }
