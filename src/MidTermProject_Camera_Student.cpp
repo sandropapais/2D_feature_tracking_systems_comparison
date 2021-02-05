@@ -81,11 +81,11 @@ int main(int argc, const char *argv[])
         // string-based selection based on detectorType -> SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
         if (detectorType.compare("SHITOMASI") == 0)
         {
-            detKeypointsShiTomasi(keypoints, imgGray, false);
+            detKeypointsShiTomasi(keypoints, imgGray, bVis);
         }
         else if (detectorType.compare("HARRIS") == 0)
         {
-            detKeypointsHarris(keypoints, imgGray, false);
+            detKeypointsHarris(keypoints, imgGray, bVis);
         }
         else if (detectorType.compare("FAST") == 0 ||
                  detectorType.compare("BRISK") == 0 ||
@@ -93,25 +93,27 @@ int main(int argc, const char *argv[])
                  detectorType.compare("AKAZE") == 0 ||
                  detectorType.compare("SIFT") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, detectorType, false);
+            detKeypointsModern(keypoints, imgGray, detectorType, bVis);
         }
-        else
-        {
-            //...
-        }
-
-        //// STUDENT ASSIGNMENT
-        //// TASK MP.3 -> only keep keypoints on the preceding vehicle
 
         // only keep keypoints on the preceding vehicle
         bool bFocusOnVehicle = true;
         cv::Rect vehicleRect(535, 180, 180, 150);
         if (bFocusOnVehicle)
         {
-            // ...
+            auto it = keypoints.begin();
+            while (it != keypoints.end())
+            {
+                if (!vehicleRect.contains(it->pt))
+                {
+                    it = keypoints.erase(it);
+                }
+                else
+                {
+                    ++it;
+                }
+            }
         }
-
-        //// EOF STUDENT ASSIGNMENT
 
         // optional : limit number of keypoints (helpful for debugging and learning)
         bool bLimitKpts = true;
