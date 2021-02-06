@@ -41,17 +41,64 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     cv::Ptr<cv::DescriptorExtractor> extractor;
     if (descriptorType.compare("BRISK") == 0)
     {
-
         int threshold = 30;        // FAST/AGAST detection threshold score.
         int octaves = 3;           // detection octaves (use 0 to do single scale)
         float patternScale = 1.0f; // apply this scale to the pattern used for sampling the neighbourhood of a keypoint.
 
         extractor = cv::BRISK::create(threshold, octaves, patternScale);
     }
-    else
+    else if (descriptorType.compare("BRIEF") == 0)
     {
+        int bytes = 32; // legth of the descriptor in bytes, valid values are: 16, 32, or 64 
+		bool use_orientation = false; // sample patterns using keypoints orientation
 
-        //...
+        extractor = cv::xfeatures2d::BriefDescriptorExtractor::create(bytes, use_orientation);
+    }
+    else if (descriptorType.compare("ORB") == 0)
+    {
+        int nfeatures = 500; // max features to retain
+        float scaleFactor = 1.2f; // pyramid decimation ratio, greater than 1
+        int nlevels = 8; // number of pyramid levels
+        int edgeThreshold = 31; // size of border where no features are detected
+        int firstLevel = 0; // level of pyramid to put source image to
+        int WTA_K = 2; // number of points that produce each element of the oriented BRIEF descriptor
+        cv::ORB::ScoreType scoreType = cv::ORB::HARRIS_SCORE; // score used to rank features
+        int patchSize = 31; // size of patch used by oriented BREF descriptor
+        int threshold = 20; // fast detection threshold score
+
+        extractor = cv::ORB::create(nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, WTA_K, scoreType, patchSize, threshold);
+    }
+    else if (descriptorType.compare("FREAK") == 0)
+    {
+        bool orientationNormalized = true; // Enable orientation normalization
+		bool scaleNormalized = true; // Enable scale normalization
+		float patternScale = 22.0f; // Scaling of the description pattern
+		int nOctaves = 4; // Number of octaves covered by the detected keypoints
+		// const std::vector<int> & selectedPairs = std::vector<int>(); // (Optional) user defined selected pairs indexes
+
+        extractor = cv::xfeatures2d::FREAK::create(orientationNormalized, scaleNormalized, patternScale, nOctaves);
+    }
+    else if (descriptorType.compare("AKAZE") == 0)
+    {
+        cv::AKAZE::DescriptorType descriptor_type = cv::AKAZE::DESCRIPTOR_MLDB; // type of extracted descriptor
+		int  	descriptor_size = 0; // size of descriptor in bits (0=full size)
+		int  	descriptor_channels = 3; // number of channels in descriptor (1, 2, 3)
+		float  	threshold_f = 0.001f; // detector response threshold to accept point
+		int  	nOctaves = 4; // max octave evolution of image
+		int  	nOctaveLayers = 4; // default number of sublevels per scale level
+		cv::KAZE::DiffusivityType diffusivity = cv::KAZE::DIFF_PM_G2; // diffusivity type
+
+        extractor = cv::AKAZE::create(descriptor_type, descriptor_size, descriptor_channels, threshold_f, nOctaves, nOctaveLayers, diffusivity);
+    }
+    else if (descriptorType.compare("SIFT") == 0)
+    {
+        int nfeatures = 0; // number of best features to retain
+        int nOctaveLayers = 3; // number of layers in each octave
+        double contrastThreshold = 0.06; // used to filter out weak features from low contrast regions (larger thresh = less feats)
+        double edgeThreshold = 10; // used to filter out edge-like features (larger thresh = more feats)
+        double sigma = 1.6; // sigma of gaussian applied to image at octave #0
+
+        extractor = cv::xfeatures2d::SIFT::create(nfeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma);
     }
 
     // perform feature description
@@ -178,14 +225,14 @@ void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string de
 {
     // shared variables declaration
     double t;
-    int threshold;
     cv::Ptr<cv::FeatureDetector> detector;
 
     if (detectorType.compare("FAST") == 0)
     {
-        threshold = 30; // difference between intensity of the central pixel and pixels of a circle around this pixel
+        int threshold = 30; // difference between intensity of the central pixel and pixels of a circle around this pixel
         bool bNMS = true; // perform non-maxima suppression on keypoints
         cv::FastFeatureDetector::DetectorType type = cv::FastFeatureDetector::TYPE_9_16; // TYPE_9_16, TYPE_7_12, TYPE_5_8
+        
         detector = cv::FastFeatureDetector::create(threshold, bNMS, type);
 
         t = (double)cv::getTickCount();
@@ -195,9 +242,10 @@ void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string de
     }
     else if (detectorType.compare("BRISK") == 0)
     {
-        threshold = 30; // AGAST detection threshold score
+        int threshold = 30; // AGAST detection threshold score
         int octaves = 3; // detection octaves, use 0 to do single scale
         float patternScale = 1.0f; // apply this scale to the pattern used for samping the neighbourhood of a keypount
+
         detector = cv::BRISK::create(threshold, octaves, patternScale);
 
         t = (double)cv::getTickCount();
@@ -215,7 +263,8 @@ void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string de
         int WTA_K = 2; // number of points that produce each element of the oriented BRIEF descriptor
         cv::ORB::ScoreType scoreType = cv::ORB::HARRIS_SCORE; // score used to rank features
         int patchSize = 31; // size of patch used by oriented BREF descriptor
-        threshold = 20; // fast detection threshold score
+        int threshold = 20; // fast detection threshold score
+
         detector = cv::ORB::create(nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, WTA_K, scoreType, patchSize, threshold);
 
         t = (double)cv::getTickCount();
@@ -232,6 +281,7 @@ void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string de
 		int  	nOctaves = 4; // max octave evolution of image
 		int  	nOctaveLayers = 4; // default number of sublevels per scale level
 		cv::KAZE::DiffusivityType diffusivity = cv::KAZE::DIFF_PM_G2; // diffusivity type
+
         detector = cv::AKAZE::create(descriptor_type, descriptor_size, descriptor_channels, threshold_f, nOctaves, nOctaveLayers, diffusivity);
 
         t = (double)cv::getTickCount();
@@ -246,6 +296,7 @@ void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string de
         double contrastThreshold = 0.06; // used to filter out weak features from low contrast regions (larger thresh = less feats)
         double edgeThreshold = 10; // used to filter out edge-like features (larger thresh = more feats)
         double sigma = 1.6; // sigma of gaussian applied to image at octave #0
+
         detector = cv::xfeatures2d::SIFT::create(nfeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma);
 
         t = (double)cv::getTickCount();
