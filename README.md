@@ -12,6 +12,7 @@ This project involved building feature tracking systems to test various detector
 ## Results
 
 <img src="out/summaryResults.png" width="615" height="426" />
+<img src="out/BRISK-BRIEF-MAT_BF-SEL_KNN-img1.jpg" width="1442" height="187" />
 
 
 ## Dependencies for Running Locally
