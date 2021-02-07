@@ -11,7 +11,7 @@ This project involved building feature tracking systems to test various detector
 
 ## Results
 
-<img src="out/summaryResults.png" width="820" height="248" />
+<img src="out/summaryResults.png" width="615" height="426" />
 
 
 ## Dependencies for Running Locally
