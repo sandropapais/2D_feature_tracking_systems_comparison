@@ -2,7 +2,7 @@
 
 <img src="images/keypoints.png" width="820" height="248" />
 
-The idea of the camera course is to build a collision detection system - that's the overall goal for the Final Project. As a preparation for this, you will now build the feature tracking part and test various detector / descriptor combinations to see which ones perform best. This mid-term project consists of four parts:
+This project involved building feature tracking systems to test various detector, descriptor, and matcher combinations to see which ones perform best. This project consists of four parts:
 
 * Loads KITTI image sequence, setting up data structures and putting everything into a ring buffer to optimize memory load. 
 * Integrate several keypoint detectors such as SHI-TOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, and SIFT and compare them with regard to number of keypoints and speed. 
