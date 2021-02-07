@@ -38,6 +38,7 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
         matcher->match(descSource, descRef, matches); // Finds the best match for each descriptor in desc1
         t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
         cout << "NN selection, with n=" << matches.size() << "descriptor matches in " << 1000 * t / 1.0 << " ms" << endl;
+        writeMatchingResults(matches.size(), 1000 * t / 1.0 );
     }
     else if (selectorType.compare("SEL_KNN") == 0)
     { // k nearest neighbors (k=2)
@@ -56,7 +57,8 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
         }
         t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
         cout << "KNN selection, with n=" << matches.size() << " descriptor matches in " << 1000 * t / 1.0 << " ms" << endl;
-        cout << "# keypoints removed by distance ratio check = " << knn_matches.size() - matches.size() << endl;
+        cout << "Keypoints removed by distance ratio check = " << knn_matches.size() - matches.size() << endl;
+        writeMatchingResults(matches.size(), 1000 * t / 1.0 );
     }
 }
 
@@ -132,6 +134,7 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     extractor->compute(img, keypoints, descriptors);
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
     cout << descriptorType << " descriptor extraction in " << 1000 * t / 1.0 << " ms" << endl;
+    writeDescriptionResults(1000 * t / 1.0 );
 }
 
 // Detect keypoints in image using the traditional Shi-Thomasi detector
@@ -162,6 +165,7 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
     }
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
     cout << "Shi-Tomasi detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    writeDetectionResults(keypoints.size(),1000 * t / 1.0);
 
     // visualize results
     if (bVis)
@@ -193,7 +197,7 @@ void detKeypointsHarris(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis
     cv::convertScaleAbs(dst_norm, dst_norm_scaled);
 
     // Look for prominent corners and instantiate keypoints
-    double maxOverlap = 0.0; // max. permissible overlap between two features in %, used during non-maxima suppression
+    double maxOverlap = 0; // max. permissible overlap between two features in %, used during non-maxima suppression
     for (size_t j = 0; j < dst_norm.rows; j++)
     {
         for (size_t i = 0; i < dst_norm.cols; i++)
@@ -232,6 +236,7 @@ void detKeypointsHarris(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis
 
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
     cout << "Harris detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    writeDetectionResults(keypoints.size(),1000 * t / 1.0);
 
     // visualize results
     if (bVis)
@@ -265,6 +270,7 @@ void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string de
         detector->detect(img, keypoints);
         t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
         cout << detectorType << " detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+        writeDetectionResults(keypoints.size(),1000 * t / 1.0);
     }
     else if (detectorType.compare("BRISK") == 0)
     {
@@ -278,6 +284,7 @@ void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string de
         detector->detect(img, keypoints);
         t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
         cout << detectorType << " detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+        writeDetectionResults(keypoints.size(),1000 * t / 1.0);
     }
     else if (detectorType.compare("ORB") == 0)
     {
@@ -297,6 +304,7 @@ void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string de
         detector->detect(img, keypoints);
         t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
         cout << detectorType << " detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+        writeDetectionResults(keypoints.size(),1000 * t / 1.0);
     }
     else if (detectorType.compare("AKAZE") == 0)
     {
@@ -314,6 +322,7 @@ void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string de
         detector->detect(img, keypoints);
         t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
         cout << detectorType << " detection with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+        writeDetectionResults(keypoints.size(),1000 * t / 1.0);
     }
     else if (detectorType.compare("SIFT") == 0)
     {
@@ -329,6 +338,7 @@ void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string de
         detector->detect(img, keypoints);
         t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
         cout << detectorType << " detection with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+        writeDetectionResults(keypoints.size(), 1000 * t / 1.0);
     }
 
     // visualize results
@@ -341,5 +351,74 @@ void detKeypointsModern(vector<cv::KeyPoint> &keypoints, cv::Mat &img, string de
         imshow(windowName, visImage);
         cv::waitKey(0);
     }
-
 }
+
+void writeDetectionResults(float keypointsSize, double t)
+{
+    // Save results to workspace
+    ofstream outfile;
+    string outfileName = "../out/detectionResults.csv";
+    outfile.open(outfileName, ofstream::app);
+    if (outfile.is_open())
+    {
+        outfile << "," << keypointsSize << "," << t;
+        outfile.close();
+    }
+    else cout << "[Error]: Unable to open file" << endl;
+}
+
+void writeDescriptionResults(double t)
+{
+    // Save results to workspace
+    ofstream outfile;
+    string outfileName = "../out/descriptionResults.csv";
+    outfile.open(outfileName, ofstream::app);
+    if (outfile.is_open())
+    {
+        outfile << "," << t;
+        outfile.close();
+    }
+    else cout << "[Error]: Unable to open file" << endl;
+}
+
+void writeMatchingResults(float matchesSize, double t)
+{
+    // Save results to workspace
+    ofstream outfile;
+    string outfileName = "../out/matchingResults.csv";
+    outfile.open(outfileName, ofstream::app);
+    if (outfile.is_open())
+    {
+        outfile << "," << matchesSize << "," << t;
+        outfile.close();
+    }
+    else cout << "[Error]: Unable to open file" << endl;
+}
+
+void iniResults(string fileName, string rowName)
+{
+    // Save results to workspace
+    ofstream outfile;
+    outfile.open(fileName, ofstream::app);
+    if (outfile.is_open())
+    {
+        outfile << rowName;
+        outfile.close();
+    }
+    else cout << "[Error]: Unable to open file" << endl;
+}
+
+void endResults(string fileName)
+{
+    // Save results to workspace
+    ofstream outfile;
+    outfile.open(fileName, ofstream::app);
+    if (outfile.is_open())
+    {
+        outfile << "\n";
+        outfile.close();
+    }
+    else cout << "[Error]: Unable to open file" << endl;
+}
+
+

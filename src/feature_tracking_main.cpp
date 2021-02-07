@@ -40,6 +40,29 @@ int main(int argc, const char *argv[])
     vector<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
     bool bVis = false;            // visualize results
 
+    // detection parameters
+    string detectorType = "SIFT"; // SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+    bool bFocusOnVehicle = true;
+    cv::Rect vehicleRect(535, 180, 180, 150);
+    bool bLimitKpts = false;
+    int maxKeypoints = 50;
+
+    // description/extraction parameters
+    string descriptorType = "ORB"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+    string descriptorClass = descriptorType.compare("SIFT") == 0 ? "DES_HOG" : "DES_BINARY"; // All binary descriptors except SIFT
+    // Note: AKAZE descriptor only workts with AKAZE detector
+    // Issue: SIFT detector with ORB descriptor not working
+
+    // matching parameters
+    string matcherType = "MAT_BF";  // MAT_BF, MAT_FLANN
+    string selectorType = "SEL_KNN"; // SEL_NN, SEL_KNN
+
+    // initialize csv output file rows
+    string rowName = detectorType + "-" + descriptorType;
+    iniResults("../out/detectionResults.csv", detectorType);
+    iniResults("../out/descriptionResults.csv", rowName);
+    iniResults("../out/matchingResults.csv", rowName);
+
     /* MAIN LOOP OVER ALL IMAGES */
 
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex++)
@@ -76,7 +99,6 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "SIFT";
 
         // string-based selection based on detectorType -> SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
         if (detectorType.compare("SHITOMASI") == 0)
@@ -102,8 +124,6 @@ int main(int argc, const char *argv[])
         }
         
         // only keep keypoints on the preceding vehicle
-        bool bFocusOnVehicle = true;
-        cv::Rect vehicleRect(535, 180, 180, 150);
         if (bFocusOnVehicle)
         {
             auto it = keypoints.begin();
@@ -121,11 +141,8 @@ int main(int argc, const char *argv[])
         }
 
         // optional : limit number of keypoints (helpful for debugging and learning)
-        bool bLimitKpts = true;
         if (bLimitKpts)
         {
-            int maxKeypoints = 50;
-
             if (detectorType.compare("SHITOMASI") == 0)
             { // there is no response info, so keep the first 50 as they are sorted in descending quality order
                 keypoints.erase(keypoints.begin() + maxKeypoints, keypoints.end());
@@ -139,9 +156,9 @@ int main(int argc, const char *argv[])
         cout << "#2 : DETECT KEYPOINTS done" << endl;
 
         /* EXTRACT KEYPOINT DESCRIPTORS */
+
         // Note: AKAZE descriptors only work with AKAZE detector
         cv::Mat descriptors;
-        string descriptorType = "SIFT"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
         descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType);
 
         // push descriptors for current frame to end of data buffer
@@ -150,31 +167,10 @@ int main(int argc, const char *argv[])
         cout << "#3 : EXTRACT DESCRIPTORS done" << endl;
 
         /* MATCH KEYPOINT DESCRIPTORS */
+        
         if (dataBuffer.size() > 1) // wait until at least two images have been processed
         {
             vector<cv::DMatch> matches;
-            string matcherType = "MAT_FLANN";  // MAT_BF, MAT_FLANN
-            string descriptorClass;         // DES_BINARY, DES_HOG
-            string selectorType = "SEL_KNN"; // SEL_NN, SEL_KNN
-
-            // Set descriptor class based on descriptor type
-            if (descriptorType.compare("BRISK") == 0 ||
-                descriptorType.compare("BRIEF") == 0 ||
-                descriptorType.compare("ORB") == 0 ||
-                descriptorType.compare("FREAK") == 0 ||
-                descriptorType.compare("AKAZE") == 0)
-            {
-                descriptorClass = "DES_BINARY";
-            }
-            else if (descriptorType.compare("SIFT") == 0)
-            {
-                descriptorClass = "DES_HOG";
-            }
-            else
-            {
-                printf("[Error]: Descriptor matcher not compatible with descriptor type");
-                return -1;
-            }
 
             // perform matching
             matchDescriptors((dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints,
@@ -199,14 +195,21 @@ int main(int argc, const char *argv[])
 
                 string windowName = "Matching keypoints between two camera images";
                 cv::namedWindow(windowName, 7);
+                string imgName = "../out/"+detectorType+"-"+descriptorType+"-"+matcherType+"-"+selectorType+"-img"+to_string(imgIndex)+".jpg";
                 cv::imshow(windowName, matchImg);
+                imwrite(imgName, matchImg);
                 cout << "Press key to continue to next image" << endl;
-                cv::waitKey(0); // wait for key to be pressed
+                //cv::waitKey(0); // wait for key to be pressed
             }
             bVis = false;
         }
 
     } // eof loop over all images
+
+    // end csv output file rows
+    endResults("../out/detectionResults.csv");
+    endResults("../out/descriptionResults.csv");
+    endResults("../out/matchingResults.csv");
 
     return 0;
 }
