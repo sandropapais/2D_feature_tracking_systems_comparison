@@ -9,6 +9,11 @@ This project involved building feature tracking systems to test various detector
 * Implement descriptor extraction for BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT and matching using brute force and also the FLANN approach. 
 * Test the various algorithms in different combinations and compare them with regard to some performance measures. 
 
+## Results
+
+<img src="out/summaryResults.png" width="820" height="248" />
+
+
 ## Dependencies for Running Locally
 * cmake >= 2.8
   * All OSes: [click here for installation instructions](https://cmake.org/install/)
