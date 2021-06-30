@@ -11,7 +11,7 @@ This project involved building feature tracking systems to test various detector
 
 ## Results
 
-Various combinations of the 7 detectors and 6 descriptors chosen were run with a brute-force matcher using a k-nearest-neighbour selector and descriptor distance ratio of 0.8. The resulting number of features and time of computation for 10 image dataset is shown below.
+Various combinations of the 7 detectors and 6 descriptors chosen were run with a brute-force matcher using a k-nearest-neighbour selector and descriptor distance ratio of 0.8. The resulting number of features and time of computation for 10 image dataset is shown below. The top three combinations in terms of number of matches and computational time are BRIST-BRIEF, BRISK-BRISK, and BRISK-SIFT.
 
 <img src="out/summaryResults.png" width="615" height="426" />
 
@@ -22,7 +22,6 @@ BRISK detector with BRIEF descriptor gives the most keypoint matches for the dat
 HARTRAK detector with BRISK descriptors gives the least keypoint matches for the dataset, with 16 keypoint matches per frame on average in	357.4 ms across 10 images.
 
 <img src="out/HARRIS-BRISK-MAT_BF-SEL_KNN-img8.jpg" width="1442" height="187" />
-
 
 
 ## Dependencies for Running Locally
